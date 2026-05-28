@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN"><head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport" />
+<title>template</title>
+<style>* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    width: 100vw;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #f0f0f0;
+}
+@media screen and (max-width: 1920px) {
+    #canvas {
+        transform: scale(calc(100vw / 1920));
+    }
+}
+
+.bg { position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; background: url("images/bg-3640cb.png") no-repeat; }
+.shape { position: absolute; left: 42px; top: 43px; width: 553px; height: 531px; background: url("images/shape-ea39b5.png") no-repeat; }
+.img { position: absolute; left: 480px; top: 320px; width: 906px; height: 549px; background: url("images/img-f50693.png") no-repeat; }
+.group {
+  position: absolute;
+  left: 902px;
+  top: 134px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 920px;
+  height: 617px;
+}
+.img-2 { width: 719px; height: 463px; margin-left: 199px; background: url("images/img-2f755a.png") no-repeat; flex-shrink: 0; }
+.row {
+  width: 273px;
+  height: 130px;
+  margin-top: 22px;
+  color: rgba(9, 9, 247, 1);
+  font-size: 110.5px;
+  text-align: left;
+  flex-shrink: 0;
+}
+.strip {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 1080px;
+  background: url("images/strip-03d587.png") no-repeat;
+  opacity: 0.25;
+}
+.what-a-beautiful-day {
+  position: absolute;
+  left: 50px;
+  top: 586px;
+  width: 506px;
+  height: 59px;
+  color: rgba(255, 255, 255, 1);
+  font-size: 50.15px;
+  text-align: left;
+}
+.text {
+  position: absolute;
+  left: 53px;
+  top: 442px;
+  width: 845px;
+  height: 106px;
+  color: rgba(255, 255, 255, 1);
+  font-size: 90.1px;
+  text-align: left;
+}
+</style>
+</head>
+<body>
+<div id="canvas">
+<div class="bg layer">
+</div>
+<div class="shape layer">
+</div>
+<div class="img layer">
+</div>
+<div class="group layer-group v-col">
+<div class="img-2 layer">
+</div><div class="row layer">
+<span>换行</span>
+</div></div>
+<div class="strip layer">
+</div>
+<div class="what-a-beautiful-day layer">
+<span>What a beautiful day.</span>
+</div>
+<div class="text layer">
+<span>Hello World!</span>
+</div>
+</div>
+<script src="http://localhost:8088/t/main.js"></script>
+
+</body></html>

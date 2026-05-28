@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML → Unity UI Toolkit 转换工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:#f4f6f9; color:#2c3e50; height:100vh; display:flex; flex-direction:column; padding:0 1rem; }
+        header { padding:1rem 0 0.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+        h1 { font-size:1.6rem; color:#1a1a2e; white-space:nowrap; display:flex; align-items:center; gap:0.5rem; }
+        h1 span { background:#6366f1; color:white; font-size:0.85rem; padding:0.15rem 0.7rem; border-radius:20px; font-weight:500; }
+        .version-badge { background: #6366f1; color: white; font-size: 0.8rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 6px; white-space: nowrap; }
+        .subtitle { color:#5a6a7a; font-size:0.9rem; white-space:nowrap; }
+        .button-row { display:flex; gap:0.8rem; align-items:center; margin-left:auto; flex-wrap:wrap; }
+        button { padding:0.6rem 1.2rem; border-radius:8px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; transition:background 0.2s,transform 0.1s; display:inline-flex; align-items:center; gap:0.3rem; }
+        button:active { transform:scale(0.98); }
+        .btn-primary { background:#6366f1; color:white; } .btn-primary:hover { background:#4f46e5; }
+        .btn-download { background:#0f172a; color:white; } .btn-download:hover { background:#1e293b; }
+        .btn-copy { background:#ecf0f1; color:#2c3e50; padding:0.4rem 0.8rem; font-size:0.8rem; border:1px solid #dce3ea; }
+        .btn-copy:hover { background:#d5dbdf; }
+        .message { font-size:0.85rem; font-weight:500; padding:0.3rem 0.8rem; border-radius:6px; background:#eef2ff; color:#4338ca; white-space:nowrap; }
+        .message.error { background:#fff5f5; color:#b91c1c; } .message.success { background:#ecfdf5; color:#065f46; }
+        .workspace { flex:1; display:flex; gap:1rem; margin-top:0.5rem; min-height:0; }
+        .panel { background:white; border-radius:12px; padding:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.04); display:flex; flex-direction:column; min-width:0; }
+        .panel-source { flex:1 1 300px; } .panel-preview { flex:2 1 500px; } .panel-output { flex:1 1 300px; }
+        .panel label { font-weight:600; font-size:0.9rem; color:#34495e; display:flex; align-items:center; gap:0.4rem; margin-bottom:0.3rem; }
+        textarea { width:100%; flex:1; border:1px solid #dce3ea; border-radius:8px; padding:0.8rem; font-family:'Fira Code','Consolas',monospace; font-size:0.85rem; resize:none; background:#fafbfc; color:#222; min-height:150px; }
+        textarea:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+        .preview-box { border:1px solid #dce3ea; border-radius:8px; overflow:hidden; background:#fff; flex:1; display:flex; flex-direction:column; }
+        .preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
+        .size-inputs { display:flex; gap:0.5rem; align-items:center; margin-left:auto; }
+        .size-inputs input { width:75px; padding:0.3rem 0.5rem; border:1px solid #dce3ea; border-radius:6px; font-size:0.8rem; }
+        .size-inputs span { font-size:0.8rem; color:#5a6a7a; }
+        .preview-iframe-wrapper { flex:1; min-height:0; overflow:hidden; position:relative; }
+        iframe { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%) scale(1); border:none; background:white; }
+        .output-code-wrapper { flex:1; border-radius:8px; background:#f8f9fc; border:1px solid #e2e8f0; overflow:auto; min-height:0; }
+        pre { margin:0; padding:0.8rem; font-size:0.8rem; line-height:1.5; white-space:pre; }
+        pre code.hljs { display:block; overflow-x:visible; padding:0; }
+        .hljs { background: transparent !important; }
+        code { font-family:'Fira Code','Consolas',monospace; }
+        .split-panel { display:flex; flex-direction:column; height:100%; }
+        .uss-section, .uxml-section { flex:1; display:flex; flex-direction:column; min-height:0; }
+        .uss-section { border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:0.5rem; }
+        @media (max-width:900px) { .workspace { flex-direction:column; } .panel { flex:auto; } .panel-preview { min-height:400px; } textarea { min-height:200px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ HTML → UI Toolkit <span>UXML/USS</span></h1>
+        <div class="version-badge">v1.7.40</div>
+        <span class="subtitle">更新示例模板</span>
+        <div class="button-row">
+            <button class="btn-primary" id="convertBtn">🔁 执行转换</button>
+            <button class="btn-download" id="downloadBtn">⬇️ 下载 UXML</button>
+            <button class="btn-download" id="downloadUssBtn">⬇️ 下载 USS</button>
+            <div id="messageBox" class="message">等待转换</div>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="panel panel-source">
+            <label>📝 HTML 源码</label>
+            <textarea id="htmlInput" placeholder="在此粘贴HTML代码..."></textarea>
+        </div>
+        <div class="panel panel-preview">
+            <div class="preview-header">
+                <label>👁️ 实时预览</label>
+                <div class="size-inputs">
+                    <span>宽</span><input type="number" id="previewWidth" value="1920" min="100" step="10">
+                    <span>高</span><input type="number" id="previewHeight" value="1080" min="100" step="10">
+                </div>
+            </div>
+            <div class="preview-box">
+                <div class="preview-iframe-wrapper">
+                    <iframe id="previewFrame"></iframe>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-output">
+            <div class="split-panel">
+                <div class="uss-section">
+                    <label>🎨 USS 输出 <button class="btn-copy" onclick="copyToClipboard('ussOutput')">📋 复制</button></label>
+                    <div class="output-code-wrapper">
+                        <pre><code id="ussOutput" class="language-css"></code></pre>
+                    </div>
+                </div>
+                <div class="uxml-section">
+                    <label>🧩 UXML 输出 <button class="btn-copy" onclick="copyToClipboard('uxmlOutput')">📋 复制</button></label>
+                    <div class="output-code-wrapper">
+                        <pre><code id="uxmlOutput" class="language-xml"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/template" id="exampleHtml"><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户登录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      padding: 40px 35px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-card h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: border-color 0.3s;
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: #667eea;
+    }
+
+    .remember-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .remember-group input[type="checkbox"] {
+      margin-right: 8px;
+      width: 16px;
+      height: 16px;
+      accent-color: #667eea;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+
+    .login-btn:hover {
+      opacity: 0.9;
+    }
+
+    .extra-links {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    .extra-links a {
+      color: #667eea;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    .extra-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2>欢迎回来</h2>
+    <form action="#" method="post">
+      <div class="input-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+      </div>
+      <div class="input-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" placeholder="请输入密码" required>
+      </div>
+      <div class="remember-group">
+        <input type="checkbox" id="remember" name="remember">
+        <label for="remember">记住我</label>
+      </div>
+      <button type="submit" class="login-btn">登 录</button>
+    </form>
+    <div class="extra-links">
+      <a href="#">忘记密码？</a>
+      <span>|</span>
+      <a href="#">注册新账号</a>
+    </div>
+  </div>
+</body></script>
+
+    <script>
+        (function() {
+            const escapeXml = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+            const showMessage = (text, type) => { const box = document.getElementById('messageBox'); box.textContent = text; box.className = 'message ' + (type || ''); };
+
+            const unsupportedValues = new Set(['inherit','fit-content','min-content','max-content','unset','revert','revert-layer']);
+            function isUnsupportedValue(v) { return unsupportedValues.has(v.trim().toLowerCase()); }
+
+            const browserDefaults = {
+                'color': 'rgb(27, 27, 27)', 'background-color': 'rgba(0, 0, 0, 0)', 'font-size': '14px',
+                'font-weight': '400', 'font-style': 'normal', 'text-align': 'left',
+                'width': 'auto', 'height': 'auto', 'min-width': 'auto', 'max-width': 'none', 'min-height': 'auto', 'max-height': 'none',
+                'margin-top': '0px', 'margin-right': '0px', 'margin-bottom': '0px', 'margin-left': '0px',
+                'padding-top': '0px', 'padding-right': '0px', 'padding-bottom': '0px', 'padding-left': '0px',
+                'border-top-width': '0px', 'border-right-width': '0px', 'border-bottom-width': '0px', 'border-left-width': '0px',
+                'border-top-color': 'rgb(0, 0, 0)', 'border-right-color': 'rgb(0, 0, 0)', 'border-bottom-color': 'rgb(0, 0, 0)', 'border-left-color': 'rgb(0, 0, 0)',
+                'border-top-left-radius': '0px', 'border-top-right-radius': '0px', 'border-bottom-right-radius': '0px', 'border-bottom-left-radius': '0px',
+                'flex-direction': 'column', 'flex-wrap': 'nowrap', 'align-items': 'stretch', 'justify-content': 'flex-start',
+                'opacity': '1', 'display': 'flex', 'white-space': 'normal', 'overflow': 'visible',
+                'background-image': 'none', 'transition': 'all', 'background-repeat': 'repeat',
+                'letter-spacing': 'normal',
+                'position': 'relative', 'top': 'auto', 'left': 'auto', 'right': 'auto', 'bottom': 'auto',
+                'flex-basis': 'auto', 'flex-grow': '0', 'flex-shrink': '1', 'align-self': 'auto', 'align-content': 'flex-start',
+                'aspect-ratio': 'auto', 'visibility': 'visible', 'text-overflow': 'clip',
+                'text-shadow': 'none', 'word-spacing': '0px',
+                'background-repeat': 'repeat', 'background-position': '0% 0%'
+            };
+
+            const CSS_TO_USS_MAP = {
+                'color': 'color', 'background-color': 'background-color', 'font-size': 'font-size',
+                'font-weight': '-unity-font-style', 'font-style': '-unity-font-style', 'text-align': '-unity-text-align',
+                'width': 'width', 'height': 'height', 'min-width': 'min-width', 'max-width': 'max-width', 'min-height': 'min-height', 'max-height': 'max-height',
+                'margin-top': 'margin-top', 'margin-right': 'margin-right', 'margin-bottom': 'margin-bottom', 'margin-left': 'margin-left',
+                'padding-top': 'padding-top', 'padding-right': 'padding-right', 'padding-bottom': 'padding-bottom', 'padding-left': 'padding-left',
+                'border-top-width': 'border-top-width', 'border-right-width': 'border-right-width', 'border-bottom-width': 'border-bottom-width', 'border-left-width': 'border-left-width',
+                'border-top-color': 'border-top-color', 'border-right-color': 'border-right-color', 'border-bottom-color': 'border-bottom-color', 'border-left-color': 'border-left-color',
+                'border-top-left-radius': 'border-top-left-radius', 'border-top-right-radius': 'border-top-right-radius', 'border-bottom-right-radius': 'border-bottom-right-radius', 'border-bottom-left-radius': 'border-bottom-left-radius',
+                'flex-direction': 'flex-direction', 'flex-wrap': 'flex-wrap', 'align-items': 'align-items', 'justify-content': 'justify-content',
+                'opacity': 'opacity', 'display': 'display', 'background-image': 'background-image', 'transition': 'transition',
+                'transform': 'transform', 'letter-spacing': 'letter-spacing',
+                'position': 'position', 'top': 'top', 'left': 'left', 'right': 'right', 'bottom': 'bottom',
+                'flex-basis': 'flex-basis', 'flex-grow': 'flex-grow', 'flex-shrink': 'flex-shrink',
+                'align-self': 'align-self', 'align-content': 'align-content', 'aspect-ratio': 'aspect-ratio',
+                'visibility': 'visibility', 'white-space': 'white-space', 'text-overflow': 'text-overflow',
+                'text-shadow': 'text-shadow', 'word-spacing': 'word-spacing',
+                'background-repeat': 'background-repeat', 'background-position': 'background-position',
+                'overflow': 'overflow'
+            };
+
+            const USS_DIRECT_PROPS = new Set(['translate', 'rotate', 'scale', 'transform-origin']);
+
+            const shorthandToLong = {
+                'margin': ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'],
+                'padding': ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'],
+                'border-radius': ['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'],
+                'border-width': ['border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'],
+                'border-color': ['border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color']
+            };
+
+            const USS_TO_CSS_MAP = {};
+            for (const [css, uss] of Object.entries(CSS_TO_USS_MAP)) {
+                if (uss === '-unity-font-style') continue;
+                USS_TO_CSS_MAP[uss] = css;
+            }
+            USS_TO_CSS_MAP['-unity-font-style'] = 'font-weight';
+
+            const inheritedCSSProperties = new Set([
+                'color', 'font-size', 'font-family', 'font-weight', 'font-style',
+                'text-align', 'line-height', 'letter-spacing', 'word-spacing',
+                'white-space', 'visibility', 'cursor', 'direction', 'list-style-type', 'quotes'
+            ]);
+
+            const supportedPseudoClasses = new Set(['hover', 'active', 'inactive', 'focus', 'disabled', 'enabled', 'checked', 'root']);
+
+            const colorKeywords = new Set([
+                'transparent','red','blue','green','white','black','yellow','purple','orange','pink',
+                'gray','grey','cyan','magenta','lime','navy','teal','aqua','maroon','olive','silver','fuchsia',
+                'darkred','darkblue','darkgreen','darkcyan','darkmagenta','darkorange','darkgray','darkgrey',
+                'lightblue','lightgreen','lightcyan','lightgray','lightgrey','lightpink','lightsalmon','lightyellow',
+                'aliceblue','antiquewhite','aquamarine','azure','beige','bisque','blanchedalmond','blueviolet',
+                'brown','burlywood','cadetblue','chartreuse','chocolate','coral','cornflowerblue','cornsilk',
+                'crimson','darkgoldenrod','darkkhaki','darkolivegreen','darkorchid','darksalmon','darkseagreen',
+                'darkslateblue','darkslategray','darkslategrey','darkturquoise','darkviolet','deeppink',
+                'deepskyblue','dimgray','dimgrey','dodgerblue','firebrick','floralwhite','forestgreen',
+                'gainsboro','ghostwhite','gold','goldenrod','greenyellow','honeydew','hotpink','indianred',
+                'indigo','ivory','khaki','lavender','lavenderblush','lawngreen','lemonchiffon','lightcoral',
+                'lightgoldenrodyellow','lightseagreen','lightskyblue','lightslategray','lightslategrey',
+                'lightsteelblue','limegreen','linen','mediumaquamarine','mediumblue','mediumorchid','mediumpurple',
+                'mediumseagreen','mediumslateblue','mediumspringgreen','mediumturquoise','mediumvioletred',
+                'midnightblue','mintcream','mistyrose','moccasin','navajowhite','oldlace','olivedrab',
+                'orangered','orchid','palegoldenrod','palegreen','paleturquoise','palevioletred','papayawhip',
+                'peachpuff','peru','plum','powderblue','rosybrown','royalblue','saddlebrown','salmon',
+                'sandybrown','seagreen','seashell','sienna','skyblue','slateblue','slategray','slategrey',
+                'snow','springgreen','steelblue','tan','thistle','tomato','turquoise','violet','wheat',
+                'whitesmoke','yellowgreen','rebeccapurple'
+            ]);
+
+            function parseBackgroundShorthand(value) {
+                const result = {};
+                const trimmed = value.trim();
+                if (isColorValue(trimmed)) return { backgroundColor: trimmed };
+                const imgMatch = trimmed.match(/url\([^)]*\)|(?:repeating-)?(?:linear|radial|conic)-gradient\([^)]*\)/i);
+                if (imgMatch) {
+                    result.backgroundImage = imgMatch[0];
+                    value = trimmed.replace(imgMatch[0], '').trim();
+                }
+                const colorMatch = value.match(/(#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)|transparent|[a-z]+)\b/i);
+                if (colorMatch && isColorValue(colorMatch[0])) {
+                    result.backgroundColor = colorMatch[0];
+                    value = value.replace(colorMatch[0], '').trim();
+                }
+                const parts = value.split(/\s+/).filter(p => p !== '');
+                const repeatKeywords = ['repeat','no-repeat','repeat-x','repeat-y','space','round'];
+                const positionKeywords = ['top','bottom','left','right','center'];
+                for (const part of parts) {
+                    if (repeatKeywords.includes(part.toLowerCase())) result.backgroundRepeat = part.toLowerCase();
+                    else if (positionKeywords.includes(part.toLowerCase())) result.backgroundPosition = (result.backgroundPosition ? result.backgroundPosition + ' ' : '') + part;
+                }
+                if (!result.backgroundImage && !result.backgroundRepeat && !result.backgroundPosition && result.backgroundColor) return { backgroundColor: result.backgroundColor };
+                return result;
+            }
+
+            const elementToUxml = (tag) => {
+                const map = {
+                    'body':'ui:VisualElement','div':'ui:VisualElement','span':'ui:VisualElement','p':'ui:Label','h1':'ui:Label','h2':'ui:Label','h3':'ui:Label','h4':'ui:Label','h5':'ui:Label','h6':'ui:Label',
+                    'button':'ui:Button','a':'ui:Label','img':'ui:Image','label':'ui:VisualElement','output':'ui:Label',
+                    'section':'ui:VisualElement','header':'ui:VisualElement','footer':'ui:VisualElement','nav':'ui:VisualElement','article':'ui:VisualElement','aside':'ui:VisualElement','main':'ui:VisualElement',
+                    'ul':'ui:VisualElement','ol':'ui:VisualElement','li':'ui:VisualElement','figure':'ui:VisualElement','figcaption':'ui:Label','blockquote':'ui:VisualElement','pre':'ui:Label','code':'ui:Label',
+                    'table':'ui:VisualElement','tr':'ui:VisualElement','td':'ui:VisualElement','th':'ui:Label',
+                    'details':'ui:Foldout','summary':'ui:Label','hr':'ui:VisualElement','meter':'ui:ProgressBar','progress':'ui:ProgressBar',
+                    'optgroup':'ui:VisualElement','option':'ui:Label','svg':'ui:Image','video':'ui:Image',
+                    'textarea':'ui:TextField','select':'ui:DropdownField'
+                };
+                return map[tag] || null;
+            };
+
+            const defaultTagStyles = {};
+            const convertAlignItems = (v) => ({'normal':'stretch','auto':'auto','start':'flex-start','flex-start':'flex-start','center':'center','flex-end':'flex-end','stretch':'stretch','end':'flex-end'}[v] || 'stretch');
+            const convertJustifyContent = (v) => ({'normal':'flex-start','start':'flex-start','flex-start':'flex-start','center':'center','flex-end':'flex-end','end':'flex-end','space-between':'space-between','space-around':'space-around','space-evenly':'space-evenly'}[v] || 'flex-start');
+            const convertAlignContent = (v) => ({'normal':'stretch','start':'flex-start','flex-start':'flex-start','center':'center','flex-end':'flex-end','stretch':'stretch','space-between':'space-between','space-around':'space-around'}[v] || 'stretch');
+
+            function parseColorWithAlpha(str) {
+                if (!str) return null; str = str.trim().toLowerCase(); let r,g,b,a=1;
+                if (str.startsWith('#')) { const hex=str.replace('#',''); if(hex.length===8){r=parseInt(hex.substring(0,2),16);g=parseInt(hex.substring(2,4),16);b=parseInt(hex.substring(4,6),16);a=Math.round(parseInt(hex.substring(6,8),16)/255*100)/100;} else if(hex.length===6){r=parseInt(hex.substring(0,2),16);g=parseInt(hex.substring(2,4),16);b=parseInt(hex.substring(4,6),16);} else if(hex.length===3){r=parseInt(hex[0]+hex[0],16);g=parseInt(hex[1]+hex[1],16);b=parseInt(hex[2]+hex[2],16);} else return null; }
+                else if (str==='transparent'){r=0;g=0;b=0;a=0;}
+                else if (str.startsWith('rgba')){const m=str.match(/[\d.]+/g);if(m&&m.length>=4){r=parseInt(m[0]);g=parseInt(m[1]);b=parseInt(m[2]);a=parseFloat(m[3]);}else return null;}
+                else if (str.startsWith('rgb')){const m=str.match(/\d+/g);if(m&&m.length>=3){r=parseInt(m[0]);g=parseInt(m[1]);b=parseInt(m[2]);}else return null;}
+                else if (colorKeywords.has(str)){const temp=document.createElement('div');temp.style.color=str;const cc=getComputedStyle(temp).color;return parseColorWithAlpha(cc);}
+                else return null;
+                return {r,g,b,a};
+            }
+            function parseColor(str){const c=parseColorWithAlpha(str);return c?{r:c.r,g:c.g,b:c.b}:null;}
+            function formatColor(c){return c.a===1?`rgb(${c.r},${c.g},${c.b})`:`rgba(${c.r},${c.g},${c.b},${c.a})`;}
+            function normalizeColorValue(v){if(colorKeywords.has(v.trim().toLowerCase()))return v.trim().toLowerCase();if(v.trim().toLowerCase()==='transparent')return'transparent';const c=parseColorWithAlpha(v);return c?formatColor(c):v;}
+            function rgbToHex(c){const cl=parseColor(c);if(!cl)return c;return`#${((1<<24)+(cl.r<<16)+(cl.g<<8)+cl.b).toString(16).slice(1)}`;}
+            function getAverageColor(grad){const re=/(rgba?|hsla?)\([^)]+\)|#[0-9a-fA-F]{3,8}|\btransparent\b/g;const m=grad.match(re);if(!m||m.length===0)return'#ffffff';const cs=m.map(x=>parseColorWithAlpha(x)).filter(x=>x);if(cs.length===0)return'#ffffff';let tr=0,tg=0,tb=0,ta=0;cs.forEach(c=>{tr+=c.r;tg+=c.g;tb+=c.b;ta+=c.a;});const cnt=cs.length;const avg={r:Math.round(tr/cnt),g:Math.round(tg/cnt),b:Math.round(tb/cnt),a:Math.round(ta/cnt*100)/100};return formatColor(avg);}
+            function isSimilar(a,b){a=String(a).trim();b=String(b).trim();if(a===b)return true;const na=parseFloat(a),nb=parseFloat(b);if(!isNaN(na)&&!isNaN(nb))return Math.abs(na-nb)<0.1;return false;}
+            function isUnsupportedUnit(v){if(!v)return false;return/^-?[\d.]+(vh|vw|vmin|vmax|em|rem|ex|ch|cm|mm|in|pt|pc)$/i.test(v)||(/^-?[\d.]+$/.test(v)&&v!=='0');}
+            function isColorValue(v){
+                v = v.trim().toLowerCase();
+                if (colorKeywords.has(v)) return true;
+                if (v.startsWith('#')) return /^#[0-9a-fA-F]{3,8}$/.test(v);
+                if ((v.startsWith('rgba') || v.startsWith('hsla')) && v.includes('(') && v.includes(')')) return true;
+                if ((v.startsWith('rgb') || v.startsWith('hsl')) && v.includes('(') && v.includes(')')) return true;
+                return false;
+            }
+            function isVarValue(v){return/\bvar\(/i.test(v);}
+
+            function splitBorderValue(val){const p=[];const re=/(var\([^)]+\)|rgba?|hsla?)\([^)]*\)|[^\s]+/g;let m;while((m=re.exec(val))!==null)p.push(m[0]);return p;}
+            function expandShorthandToFourValues(v){if(!Array.isArray(v))v=[v];if(v.length===1)return[v[0],v[0],v[0],v[0]];if(v.length===2)return[v[0],v[1],v[0],v[1]];if(v.length===3)return[v[0],v[1],v[2],v[1]];return[v[0],v[1],v[2],v[3]];}
+
+            function removeAtRules(t){let r='',i=0;while(i<t.length){if(t[i]==='/'&&t[i+1]==='*'){let j=t.indexOf('*/',i+2);if(j===-1)break;i=j+2;continue;}if(t[i]==='@'){while(i<t.length&&t[i]!=='{')i++;if(i>=t.length)break;i++;let d=1;while(i<t.length&&d>0){if(t[i]==='{')d++;else if(t[i]==='}')d--;i++;}continue;}else{r+=t[i];i++;}}return r;}
+
+            function isSelectorSupported(sel){if(sel.includes('::')||sel.includes('[')||sel.includes('+')||sel.includes('~'))return false;const re=/:([a-zA-Z-]+)(\([^)]*\))?/g;let m;while((m=re.exec(sel))!==null){const p=m[1].toLowerCase();if(p==='root'||p==='hover'||p==='active'||p==='inactive'||p==='focus'||p==='disabled'||p==='enabled'||p==='checked')continue;return false;}return true;}
+            function parseSelectorAndPseudo(sel){if(!isSelectorSupported(sel))return null;const m=sel.match(/:([a-zA-Z-]+)$/);if(!m)return{baseSelector:sel,pseudo:null};const p=m[1].toLowerCase();if(!supportedPseudoClasses.has(p))return null;const base=sel.slice(0,sel.lastIndexOf(':'));return{baseSelector:base,pseudo:p};}
+            function stripImportant(v){return v.replace(/\s*!important\s*$/i,'');}
+
+            function processDeclaration(prop,value,decs){
+                const cv=stripImportant(value.trim());
+                if(!cv || isUnsupportedValue(cv)) return;
+                if(prop==='background'){
+                    delete decs['background-color'];delete decs['background-image'];delete decs['background-repeat'];delete decs['background-position'];
+                    const bgParsed = parseBackgroundShorthand(cv);
+                    if(bgParsed.backgroundColor) decs['background-color'] = bgParsed.backgroundColor;
+                    if(bgParsed.backgroundImage) decs['background-image'] = bgParsed.backgroundImage;
+                    if(bgParsed.backgroundRepeat) decs['background-repeat'] = bgParsed.backgroundRepeat;
+                    if(bgParsed.backgroundPosition) decs['background-position'] = bgParsed.backgroundPosition;
+                    if(Object.keys(bgParsed).length===0 && isVarValue(cv)) decs['background-color'] = cv;
+                    return;
+                }
+                switch(prop){
+                    case'border':{const ps=splitBorderValue(cv);let w=null,cl=null;for(const p of ps){if(/^\d+(\.\d+)?(px|em|rem|%|vh|vw)?$/.test(p)||p==='thin'||p==='medium'||p==='thick')w=p;else if(isColorValue(p)||isVarValue(p))cl=p;}if(w){decs['border-top-width']=w;decs['border-right-width']=w;decs['border-bottom-width']=w;decs['border-left-width']=w;}if(cl){decs['border-top-color']=cl;decs['border-right-color']=cl;decs['border-bottom-color']=cl;decs['border-left-color']=cl;}break;}
+                    case'border-top':case'border-right':case'border-bottom':case'border-left':{const d=prop.split('-')[1];const ps=splitBorderValue(cv);let w=null,cl=null;for(const p of ps){if(/^\d+(\.\d+)?(px|em|rem|%|vh|vw)?$/.test(p)||p==='thin'||p==='medium'||p==='thick')w=p;else if(isColorValue(p)||isVarValue(p))cl=p;}if(w)decs[`border-${d}-width`]=w;if(cl)decs[`border-${d}-color`]=cl;break;}
+                    case'border-width':{const ws=cv.split(/\s+/);if(ws.length===1){decs['border-top-width']=decs['border-right-width']=decs['border-bottom-width']=decs['border-left-width']=ws[0];}else if(ws.length===2){decs['border-top-width']=decs['border-bottom-width']=ws[0];decs['border-left-width']=decs['border-right-width']=ws[1];}else if(ws.length===3){decs['border-top-width']=ws[0];decs['border-left-width']=decs['border-right-width']=ws[1];decs['border-bottom-width']=ws[2];}else if(ws.length===4){decs['border-top-width']=ws[0];decs['border-right-width']=ws[1];decs['border-bottom-width']=ws[2];decs['border-left-width']=ws[3];}break;}
+                    case'border-color':{const cs=splitBorderValue(cv);if(cs.length===1){decs['border-top-color']=decs['border-right-color']=decs['border-bottom-color']=decs['border-left-color']=cs[0];}else if(cs.length===2){decs['border-top-color']=decs['border-bottom-color']=cs[0];decs['border-left-color']=decs['border-right-color']=cs[1];}else if(cs.length===3){decs['border-top-color']=cs[0];decs['border-left-color']=decs['border-right-color']=cs[1];decs['border-bottom-color']=cs[2];}else if(cs.length===4){decs['border-top-color']=cs[0];decs['border-right-color']=cs[1];decs['border-bottom-color']=cs[2];decs['border-left-color']=cs[3];}break;}
+                    case'border-radius':{const rs=cv.split(/\s+/);const ex=expandShorthandToFourValues(rs);decs['border-top-left-radius']=ex[0];decs['border-top-right-radius']=ex[1];decs['border-bottom-right-radius']=ex[2];decs['border-bottom-left-radius']=ex[3];break;}
+                    case'margin':case'padding':{const vs=cv.split(/\s+/);const ev=expandShorthandToFourValues(vs);const ss=prop==='margin'?['margin-top','margin-right','margin-bottom','margin-left']:['padding-top','padding-right','padding-bottom','padding-left'];for(let i=0;i<4;i++)decs[ss[i]]=ev[i];break;}
+                    default:decs[prop]=cv;
+                }
+            }
+
+            function addTagClassesToDoc(doc){doc.querySelectorAll('*').forEach(el=>{const t=el.tagName.toLowerCase();if(!el.classList.contains(`html-tag-${t}`))el.classList.add(`html-tag-${t}`);});}
+
+            function parseCSSTransform(tv,node,cs){
+                const r=[];
+                if(!tv||tv==='none')return r;
+                const re=/(\w+)\(([^)]+)\)/g;
+                let m,tx=null,ty=null;
+                while((m=re.exec(tv))!==null){
+                    const f=m[1].toLowerCase();
+                    const a=m[2].split(/\s*,\s*|\s+/).filter(s=>s!=='');
+                    switch(f){
+                        case'translate':tx=a[0]||'0';ty=a[1]||'0';break;
+                        case'translatex':tx=a[0]||'0';break;
+                        case'translatey':ty=a[0]||'0';break;
+                        case'rotate':r.push({ussProp:'rotate',ussValue:a[0]||'0deg'});break;
+                        case'rotatex':r.push({ussProp:'rotate',ussValue:`1 0 1 ${a[0]||'0deg'}`});break;
+                        case'rotatey':r.push({ussProp:'rotate',ussValue:`0 1 1 ${a[0]||'0deg'}`});break;
+                        case'scale':{const x=a[0]||'1';const y=a[1]||x;r.push({ussProp:'scale',ussValue:`${x} ${y}`});break;}
+                        case'scalex':r.push({ussProp:'scale',ussValue:`${a[0]||'1'} 1`});break;
+                        case'scaley':r.push({ussProp:'scale',ussValue:`1 ${a[0]||'1'}`});break;
+                    }
+                }
+                if(tx!==null||ty!==null)r.push({ussProp:'translate',ussValue:`${tx||'0'} ${ty||'0'}`});
+                return r;
+            }
+
+            const sizeProps=['margin-top','margin-right','margin-bottom','margin-left','padding-top','padding-right','padding-bottom','padding-left','border-top-width','border-right-width','border-bottom-width','border-left-width','border-top-left-radius','border-top-right-radius','border-bottom-right-radius','border-bottom-left-radius','width','height','min-width','max-width','min-height','max-height','top','left','right','bottom','flex-basis','word-spacing','letter-spacing','font-size'];
+
+            function processCSSPropertyForOutput(cssProp,cssValue,node,cs,cssRules,preset={}){
+                let rv=stripImportant(cssValue);
+                if(!rv || isUnsupportedValue(rv)) return null;
+                if(cssProp.startsWith('--')){if(isColorValue(rv))rv=normalizeColorValue(rv);else if(rv&&!rv.includes(' ')){if(isUnsupportedUnit(rv)&&cs){const cp=cs.getPropertyValue(cssProp);if(cp&&cp.endsWith('px'))rv=cp;}}return{ussProp:cssProp,ussValue:rv};}
+                if(cssProp==='transform')return null;
+                
+                if (cssProp === 'display') {
+                    if (rv === 'none') return {ussProp: 'display', ussValue: 'none'};
+                    if (rv === 'flex') return null;
+                    if (rv === 'grid') {
+                        return [
+                            {ussProp: 'flex-direction', ussValue: 'row'},
+                            {ussProp: 'flex-wrap', ussValue: 'wrap'},
+                            {ussProp: 'justify-content', ussValue: 'space-between'}
+                        ];
+                    }
+                    return null;
+                }
+                
+                const ussProp=CSS_TO_USS_MAP[cssProp];if(!ussProp)return null;
+                let dv=browserDefaults[cssProp]||'';if(cssProp==='background-clip')return null;
+                if(cssProp==='flex-direction'&&cs&&cs.getPropertyValue('display').trim()!=='flex'&&cs.getPropertyValue('display').trim()!=='grid')return null;
+                const colorProps=['color','background-color','border-top-color','border-right-color','border-bottom-color','border-left-color'];
+                if(colorProps.includes(cssProp)){dv=normalizeColorValue(dv);rv=normalizeColorValue(rv);}
+
+                if(isVarValue(rv)){if(/^\s*var\([^)]+\)\s*$/.test(rv.trim()))return{ussProp,ussValue:rv};if(cssProp==='background-color'||cssProp==='background-image'||cssProp==='background'){const colorRe=/(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|\btransparent\b|[a-zA-Z]+)/g;const matches=rv.match(colorRe);if(matches){const nonVar=matches.filter(x=>!isVarValue(x)&&isColorValue(x));if(nonVar.length>0)rv=nonVar[nonVar.length-1];else return null;}else return null;}else return null;}
+
+                if(/\bclamp\(/i.test(rv)&&cs){const cp=cs.getPropertyValue(cssProp);if(cp&&cp.endsWith('px'))rv=cp;}
+                if(cssProp==='align-items')rv=convertAlignItems(rv);else if(cssProp==='justify-content')rv=convertJustifyContent(rv);else if(cssProp==='align-content')rv=convertAlignContent(rv);
+                else if(cssProp==='text-align'){const m={'left':'middle-left','center':'middle-center','right':'middle-right','justify':'middle-left'};rv=m[rv]||rv;}
+                else if(cssProp==='position'){if(rv!=='relative'&&rv!=='absolute')return null;}
+                else if(cssProp==='overflow'){if(rv!=='visible'&&rv!=='hidden')return null;}
+                else if(cssProp==='visibility'&&!['visible','hidden'].includes(rv))return null;
+                else if(cssProp==='white-space'&&!['normal','nowrap','pre','pre-wrap'].includes(rv))return null;
+                else if(cssProp==='text-overflow'&&!['clip','ellipsis'].includes(rv))return null;
+                else if(cssProp==='align-self'&&!['auto','flex-start','center','flex-end','stretch'].includes(rv))return null;
+
+                if(cssProp==='text-shadow'&&rv!=='none'){
+                    const parts = rv.split(/,(?![^(]*\))/);
+                    rv = parts[0].trim();
+                }
+
+                if(cssProp==='background-repeat'){
+                    let defaultVal = dv || 'repeat';
+                    let defParts = defaultVal.split(/\s+/);
+                    if(defParts.length === 1) defaultVal = defParts[0] + ' ' + defParts[0];
+                    let repeatValues = rv.split(',')[0].trim();
+                    let parts = repeatValues.split(/\s+/);
+                    if(parts.length === 1) parts.push(parts[0]);
+                    rv = parts.slice(0,2).join(' ');
+                    if(isSimilar(rv, defaultVal) && !(ussProp in preset)) return null;
+                    return {ussProp, ussValue: rv};
+                }
+
+                if(cssProp==='aspect-ratio'){rv=rv.trim();if(rv==='auto'){if(isSimilar(rv,dv))return null;return{ussProp,ussValue:'auto'};}if(rv.startsWith('auto '))return null;if(rv.includes('/')){const ps=rv.split('/').map(s=>parseFloat(s.trim()));if(ps.length===2&&!isNaN(ps[0])&&!isNaN(ps[1])&&ps[1]!==0)rv=(ps[0]/ps[1]).toString();else return null;}else if(!isNaN(parseFloat(rv)))rv=parseFloat(rv).toString();else return null;}
+
+                if(shorthandToLong[cssProp]){const ps=rv.split(/\s+/);const lp=shorthandToLong[cssProp];const lv=expandShorthandToFourValues(ps);const re=[];for(let i=0;i<4;i++){let v=lv[i];
+                    if (lp[i].startsWith('border-') && lp[i].includes('-radius') && v && v.includes(' ') && !isVarValue(v)) v = v.split(' ')[0];
+                    if(v&&v!=='auto'&&!v.endsWith('%')&&!v.endsWith('px')&&!isVarValue(v)){if(isUnsupportedUnit(v)&&cs){const cp=cs.getPropertyValue(lp[i]);if(cp&&cp.endsWith('px'))v=cp;else v=v+'px';}else if(!isNaN(parseFloat(v))&&!['flex-grow','flex-shrink','opacity','aspect-ratio','font-weight'].includes(cssProp))v=v+'px';}const lu=CSS_TO_USS_MAP[lp[i]];if(lu&&!isSimilar(v,browserDefaults[lp[i]]||''))re.push({ussProp:lu,ussValue:v});}return re;}
+
+                if(sizeProps.includes(cssProp)){if(rv&&rv!=='auto'&&!rv.endsWith('%')&&!rv.endsWith('px')&&!isVarValue(rv)){if(isUnsupportedUnit(rv)&&cs){const cp=cs.getPropertyValue(cssProp);rv=cp&&cp.endsWith('px')?cp:rv;}else if(!isNaN(parseFloat(rv))&&!['flex-grow','flex-shrink','opacity','aspect-ratio','font-weight'].includes(cssProp))rv=rv+'px';}}
+
+                if(cssProp==='background-image'&&/gradient/i.test(rv)){rv=getAverageColor(rv);return{ussProp:'background-color',ussValue:rv};}
+
+                if (ussProp && ussProp.startsWith('border-') && ussProp.includes('-radius') && rv && rv.includes(' ') && !isVarValue(rv)) rv = rv.split(' ')[0];
+
+                if(isSimilar(rv,dv)&&!(ussProp in preset))return null;
+                return{ussProp,ussValue:rv};
+            }
+
+            const getStylesFromComputed = (node,cs,tagName,cssRules)=>{
+                const r={};const preset=defaultTagStyles[tagName]||{};
+                const apply=(o)=>{if(!o)return;if(Array.isArray(o))o.forEach(x=>{if(x)r[x.ussProp]=x.ussValue;});else r[o.ussProp]=o.ussValue;};
+                let fw=null,fs=null;
+
+                const explicitOnlyProps = new Set([
+                    'width','height','min-width','max-width','min-height','max-height',
+                    'border-top-color','border-right-color','border-bottom-color','border-left-color'
+                ]);
+
+                for(const[cp,up]of Object.entries(CSS_TO_USS_MAP)){if(!up)continue;if(cp==='background-clip')continue;
+                    if(cp==='transform'){if(isStyleExplicit(node,'transform',cssRules)){let tv=getExplicitValue(node,'transform',cssRules)||cs.getPropertyValue('transform');if(tv&&tv!=='none'){const ps=parseCSSTransform(tv,node,cs);ps.forEach(p=>{r[p.ussProp]=p.ussValue;});}}continue;}
+                    if(explicitOnlyProps.has(cp)){
+                        if(!isStyleExplicit(node,cp,cssRules))continue;
+                        let ev=getExplicitValue(node,cp,cssRules);
+                        if(!ev)continue;
+                        apply(processCSSPropertyForOutput(cp,ev,node,cs,cssRules,preset));
+                        continue;
+                    }
+                    if(cp==='flex-direction'&&cs.getPropertyValue('display').trim()!=='flex'&&cs.getPropertyValue('display').trim()!=='grid')continue;
+                    let v=cs.getPropertyValue(cp).trim();if(!v||v==='initial')continue;
+                    if(inheritedCSSProperties.has(cp)&&!isStyleExplicit(node,cp,cssRules)){const p=node.parentElement||node.parentNode;if(p&&p.nodeType===Node.ELEMENT_NODE){const ps2=p.ownerDocument.defaultView.getComputedStyle(p);if(v===ps2.getPropertyValue(cp))continue;}}
+                    if(cp==='font-weight'){const w=parseInt(v,10);if(w>=700||v==='bold')fw='bold';continue;}
+                    if(cp==='font-style'){if(v==='italic')fs='italic';continue;}
+                    apply(processCSSPropertyForOutput(cp,v,node,cs,cssRules,preset));
+                }
+                if(fw&&fs)r['-unity-font-style']='bold-and-italic';else if(fw)r['-unity-font-style']='bold';else if(fs)r['-unity-font-style']='italic';
+                let bgClip=cs.getPropertyValue('background-clip').trim();if(!bgClip||bgClip==='border-box')bgClip=cs.getPropertyValue('-webkit-background-clip').trim();
+                if(bgClip==='text'){const color=r.color||cs.getPropertyValue('color');const bg=r['background-color']||cs.getPropertyValue('background-color');if(bg){r.color=bg;r['background-color']=color||'transparent';}}
+                for(const[k,v]of Object.entries(preset)){if(!(k in r))r[k]=v;}if(!r['-unity-font-style'])delete r['-unity-font-style'];return r;
+            };
+
+            function parseCSS(text){let cl=removeAtRules(text.replace(/\/\*[\s\S]*?\*\//g,''));const rs=[];const bs=cl.split('}');bs.forEach(b=>{const ps=b.split('{');if(ps.length<2)return;const sel=ps[0].trim();if(!sel)return;const body=ps.slice(1).join('{').trim();if(!body)return;const decs={};body.split(';').forEach(d=>{const i=d.indexOf(':');if(i>0){const p=d.substring(0,i).trim(),v=d.substring(i+1).trim();if(p&&v)processDeclaration(p,v,decs);}});if(Object.keys(decs).length>0&&isSelectorSupported(sel))rs.push({selector:sel,declarations:decs});});return rs;}
+            function isStyleExplicit(node,prop,cssRules){if(node.style&&node.style[prop])return true;if(!cssRules)return false;for(const r of cssRules){try{if(node.matches(r.selector)&&r.declarations[prop])return true;}catch(e){}}return false;}
+            function getExplicitValue(node,prop,cssRules){const il=node.style[prop];if(il)return il;if(!cssRules)return null;for(const r of cssRules){try{if(node.matches(r.selector)&&r.declarations[prop])return r.declarations[prop];}catch(e){}}return null;}
+            function normalizeTextForWhiteSpace(text,ws){if(ws==='pre'||ws==='pre-wrap')return text;if(ws==='pre-line')return text.replace(/[ \t]+/g,' ').split('\n').map(l=>l.trim()).join('\n');return text.replace(/\s+/g,' ').trim();}
+            const buildRichText=(node,doc)=>{if(node.nodeType===Node.TEXT_NODE)return node.textContent;if(node.nodeType!==Node.ELEMENT_NODE)return'';const t=node.tagName.toLowerCase();const ch=Array.from(node.childNodes).map(c=>buildRichText(c,doc)).join('');switch(t){case'b':case'strong':return`<b>${ch}</b>`;case'i':case'em':return`<i>${ch}</i>`;case'u':return`<u>${ch}</u>`;case's':case'del':return`<s>${ch}</s>`;case'br':return'<br>';case'mark':return`<mark>${ch}</mark>`;case'sub':return`<sub>${ch}</sub>`;case'sup':return`<sup>${ch}</sup>`;case'a':{const cl=doc.defaultView.getComputedStyle(node).getPropertyValue('color');return`<color=${rgbToHex(cl)}>${ch}</color>`;}default:return ch;}};
+            const phraseTags=new Set(['span','b','strong','i','em','u','s','del','mark','sub','sup','small','code','br','bdi','bdo','cite','dfn','q','rt','data','kbd','ins','ruby','samp','slot','time','wbr','a']);
+            const controlTags=new Set(['input','button','textarea','select','label','img','details','summary','meter','progress','video']);
+            const groupNodes=(arr,isIl)=>{const gs=[];let cur=[];const fl=()=>{if(cur.length>=2)gs.push({type:'inline-group',nodes:cur});else if(cur.length===1)gs.push({type:'single',node:cur[0]});cur=[];};for(const c of arr){if(c.nodeType===Node.ELEMENT_NODE){if(isIl(c))cur.push(c);else{fl();gs.push({type:'single',node:c});}}else cur.push(c);}fl();const es=arr.filter(c=>c.nodeType===Node.ELEMENT_NODE);const ht=arr.some(c=>c.nodeType===Node.TEXT_NODE&&c.textContent.trim()!=='');const ai=es.length>0&&es.every(isIl)&&(es.length>=2||(es.length===1&&ht));return{allInline:ai,groups:gs};};
+            const getScrollViewMode=(o,ox,oy)=>{let x=false,y=false;if(ox==='scroll'||ox==='auto')x=true;if(oy==='scroll'||oy==='auto')y=true;if(!x&&!y&&o){const p=o.split(/\s+/);if(p.length===1){if(p[0]==='scroll'||p[0]==='auto')x=y=true;}else{if(p[0]==='scroll'||p[0]==='auto')x=true;if(p[1]==='scroll'||p[1]==='auto')y=true;}}if(x&&y)return'VerticalAndHorizontal';if(x)return'Horizontal';if(y)return'Vertical';return null;};
+            function transformSelectorForUSS(sel){if(sel.trim()==='*')return'*';const ps=sel.split(',').map(s=>s.trim());const tp=ps.map(p=>{if(p==='*')return'*';return p.replace(/(^|[\s>+~])([a-zA-Z][a-zA-Z0-9]*)(?=[\s>+~#.:\[]|$)/g,function(m,pre,tag){return pre+'.html-tag-'+tag.toLowerCase();});});return tp.join(', ');}
+
+            function filterStylesByUSSRules(node,styleObj,ussRules,isLabel){
+                if(!ussRules||ussRules.length===0)return;
+                for(const rule of ussRules){
+                    try{if(!node.matches(rule.selector))continue;}catch(e){continue;}
+                    for(const up of Object.keys(rule.declarations)){
+                        if(up.startsWith('--'))continue;
+                        if (up === '-unity-text-align' && styleObj.__textAlignMapped) continue;
+                        if (isLabel && (up === 'justify-content' || up === 'align-items') && styleObj.__textAlignMapped) continue;
+                        if (styleObj.__gridChildSimulated && (up.startsWith('margin-') || up === 'flex-grow')) continue;
+                        const cp=USS_TO_CSS_MAP[up]||up;
+                        if(node.style&&node.style[cp])continue;
+                        if(up==='margin'||up==='padding'){
+                            delete styleObj[up];
+                            const sides=['top','right','bottom','left'];
+                            sides.forEach(side=>delete styleObj[up+'-'+side]);
+                        }else if(up==='background-color'||up==='background-image'||up==='background-repeat'){
+                            delete styleObj['background'];
+                            delete styleObj['background-image'];
+                            delete styleObj['background-color'];
+                            delete styleObj['background-repeat'];
+                        }else if(up.startsWith('border-')){
+                            delete styleObj[up];
+                            delete styleObj['border'];
+                            delete styleObj['border-top'];
+                            delete styleObj['border-right'];
+                            delete styleObj['border-bottom'];
+                            delete styleObj['border-left'];
+                        }else{
+                            if(styleObj.hasOwnProperty(up))delete styleObj[up];
+                        }
+                    }
+                }
+                for(const sh of Object.keys(shorthandToLong)){
+                    const lp=shorthandToLong[sh];const ha=lp.some(l=>CSS_TO_USS_MAP[l]&&styleObj.hasOwnProperty(CSS_TO_USS_MAP[l]));
+                    if(!ha){const us=CSS_TO_USS_MAP[sh];if(us&&styleObj.hasOwnProperty(us))delete styleObj[us];}
+                }
+            }
+
+            function generateUSSRules(cssRules){
+                const ussRs=[];
+                for(const rule of cssRules){
+                    const parsed=parseSelectorAndPseudo(rule.selector);
+                    if(!parsed)continue;
+                    const{baseSelector,pseudo}=parsed;
+                    const decl={};
+                    let hb=false,hi=false;
+                    for(const[cp,cv]of Object.entries(rule.declarations)){
+                        if(cp.startsWith('--')){decl[cp]=cv;continue;}
+                        if(cp==='transform'){
+                            const transforms = parseCSSTransform(cv, null, null);
+                            transforms.forEach(t => { decl[t.ussProp] = t.ussValue; });
+                            continue;
+                        }
+                        if (cp === 'display' && cv === 'flex') continue;
+                        const up=CSS_TO_USS_MAP[cp];
+                        if(!up)continue;
+                        if(up==='-unity-font-style'){
+                            if(cp==='font-weight'&&(parseInt(cv,10)>=700||cv==='bold'))hb=true;
+                            else if(cp==='font-style'&&cv==='italic')hi=true;
+                            continue;
+                        }
+                        let val = cv;
+                        if (cp === 'text-shadow' && val !== 'none') {
+                            const parts = val.split(/,(?![^(]*\))/);
+                            val = parts[0].trim();
+                        }
+                        if(shorthandToLong[cp]){
+                            const ps=val.split(/\s+/);
+                            const lp=shorthandToLong[cp];
+                            const lv=expandShorthandToFourValues(ps);
+                            for(let i=0;i<4;i++){
+                                const lcp=lp[i];
+                                const lup=CSS_TO_USS_MAP[lcp];
+                                let lvVal = lv[i];
+                                if (lcp.startsWith('border-') && lcp.includes('-radius') && lvVal && lvVal.includes(' ') && !isVarValue(lvVal)) lvVal = lvVal.split(' ')[0];
+                                if(lup&&lvVal)decl[lup]=lvVal;
+                            }
+                            continue;
+                        }
+                        decl[up]=val;
+                    }
+                    if(hb&&hi)decl['-unity-font-style']='bold-and-italic';
+                    else if(hb)decl['-unity-font-style']='bold';
+                    else if(hi)decl['-unity-font-style']='italic';
+                    if(Object.keys(decl).length===0)continue;
+                    let ts=transformSelectorForUSS(baseSelector);
+                    if(pseudo)ts+=':'+pseudo;
+                    ussRs.push({selector:ts,declarations:decl});
+                }
+                return ussRs;
+            }
+
+            function generateUSSText(ussRules){let t='';for(const rule of ussRules){if(Object.keys(rule.declarations).length===0)continue;t+=rule.selector+' {\n';for(const[p,v]of Object.entries(rule.declarations))t+=`    ${p}: ${v};\n`;t+='}\n\n';}return t.trim();}
+
+            function refineUSSRules(ussRules,doc){
+                if(!ussRules||!doc)return;
+                for(const rule of ussRules){
+                    let se=null;
+                    try{
+                        const bs=rule.selector.replace(/:[a-zA-Z-]+$/,'');
+                        if(bs==='*')se=doc.body||doc.documentElement||doc.querySelector('*');
+                        else if(!bs)se=doc.documentElement;
+                        else se=doc.querySelector(bs);
+                    }catch(e){}
+                    if(!se)continue;
+                    const cs=doc.defaultView.getComputedStyle(se);
+                    const bgClip=cs.getPropertyValue('-webkit-background-clip').trim()||cs.getPropertyValue('background-clip').trim();
+                    if(rule.declarations['background-image']&&/gradient/i.test(rule.declarations['background-image'])){
+                        rule.declarations['background-color']=getAverageColor(rule.declarations['background-image']);
+                        delete rule.declarations['background-image'];
+                    }
+                    if(bgClip==='text'&&rule.declarations['background-color']){
+                        const bg=rule.declarations['background-color'];
+                        if(rule.declarations.color){
+                            const tmp=rule.declarations.color;
+                            rule.declarations.color=bg;
+                            rule.declarations['background-color']=tmp;
+                        }else{
+                            rule.declarations.color=bg;
+                            rule.declarations['background-color']='transparent';
+                        }
+                    }
+                    const nd={};
+                    const arf=(o)=>{
+                        if(!o)return;
+                        if(Array.isArray(o))o.forEach(x=>{if(x)nd[x.ussProp]=x.ussValue;});
+                        else nd[o.ussProp]=o.ussValue;
+                    };
+                    for(const[up,uv]of Object.entries(rule.declarations)){
+                        if(up==='transform'){
+                            const ts=parseCSSTransform(uv,se,cs);
+                            ts.forEach(t=>nd[t.ussProp]=t.ussValue);
+                            continue;
+                        }
+                        if(USS_DIRECT_PROPS.has(up)){
+                            nd[up]=uv;
+                            continue;
+                        }
+                        if(up==='-unity-font-style'){nd[up]=uv;continue;}
+                        const cp=USS_TO_CSS_MAP[up]||up;
+                        arf(processCSSPropertyForOutput(cp,uv,se,cs,null,{}));
+                    }
+                    rule.declarations=nd;
+                }
+            }
+
+            function applyLabelTextAlignMapping(styleObj, displayValue, computedStyle) {
+                if (!styleObj || displayValue !== 'flex') return;
+                const jc = computedStyle.getPropertyValue('justify-content').trim();
+                const ai = computedStyle.getPropertyValue('align-items').trim();
+                const normalizeValue = (val, map) => map[val] || val;
+                const convertedJc = normalizeValue(jc, {'normal':'flex-start','start':'flex-start','end':'flex-end'});
+                const convertedAi = normalizeValue(ai, {'normal':'stretch','start':'flex-start','end':'flex-end'});
+                const hMap = {'flex-start':'left', 'center':'center', 'flex-end':'right'};
+                const vMap = {'flex-start':'upper', 'center':'middle', 'flex-end':'lower'};
+                let mapped = '';
+                if (convertedJc && convertedAi && convertedJc !== 'stretch' && convertedAi !== 'stretch') {
+                    const h = hMap[convertedJc];
+                    const v = vMap[convertedAi];
+                    if (h && v) mapped = v + '-' + h;
+                } else if (convertedJc) {
+                    const h = hMap[convertedJc];
+                    if (h) mapped = 'middle-' + h;
+                } else if (convertedAi) {
+                    const v = vMap[convertedAi];
+                    if (v) mapped = v + '-center';
+                }
+                if (mapped) {
+                    styleObj['-unity-text-align'] = mapped;
+                    styleObj.__textAlignMapped = true;
+                    delete styleObj['justify-content'];
+                    delete styleObj['align-items'];
+                }
+            }
+
+            function cleanTempProps(obj) {
+                delete obj.__textAlignMapped;
+                delete obj.__gridChildSimulated;
+            }
+
+            async function performConversion(){
+                const htmlString=document.getElementById('htmlInput').value.trim();if(!htmlString){showMessage('请输入HTML内容','error');return;}
+                const w=parseInt(document.getElementById('previewWidth').value,10)||1920;const h=parseInt(document.getElementById('previewHeight').value,10)||1080;
+                showMessage('正在转换...','info');
+                try{
+                    const doc=await loadIframe(htmlString,w,h);const body=doc.body;if(!body)throw new Error('HTML解析失败');
+                    addTagClassesToDoc(doc);
+                    const cssRules=[];doc.querySelectorAll('style').forEach(el=>{const parsed=parseCSS(el.textContent);parsed.forEach(r=>cssRules.push(r));});
+                    let ussRules=generateUSSRules(cssRules);
+                    ussRules=ussRules.filter(rule=>{try{const cleanedSelector=rule.selector.replace(/:[a-zA-Z-]+(\([^)]*\))?/g,'');if(cleanedSelector==='*'||!cleanedSelector)return true;return doc.querySelectorAll(cleanedSelector).length>0;}catch(e){return false;}});
+
+                    const isInlineNode=(node)=>{if(node.nodeType===Node.TEXT_NODE&&node.textContent.trim()!=='')return true;if(node.nodeType===Node.ELEMENT_NODE){const d=doc.defaultView.getComputedStyle(node).getPropertyValue('display');return d.startsWith('inline')&&d!=='none';}return false;};
+                    let autoIdCounter=0,inlineGroupCounter=0;
+                    const buildAttrString=(attrs)=>{let s='';for(const[k,v]of Object.entries(attrs)){if(k==='text'||k==='mode')s+=` ${k}="${v}"`;else s+=` ${k}="${escapeXml(v)}"`;}return s;};
+
+                    const processNode=(node,indent=0)=>{
+                        if(node.nodeType===Node.TEXT_NODE){const t=node.textContent.trim();return t?`${'  '.repeat(indent)}<ui:Label text="${escapeXml(t)}" />`:'';}
+                        if(node.nodeType!==Node.ELEMENT_NODE)return'';const tagName=node.tagName.toLowerCase();if(tagName==='style'||tagName==='script')return'';
+                        const isBody=node===body;const effectiveClass=node.className;
+                        if(tagName==='details'){
+                            const summary=node.querySelector('summary');const text=summary?summary.textContent.trim():'Foldout';const open=node.hasAttribute('open');
+                            const attrs={};const id=node.getAttribute('id');attrs.name=id||`auto-${++autoIdCounter}`;attrs['class']=effectiveClass;attrs.text=text;attrs.value=open?'true':'false';
+                            let styleObj=getStylesFromComputed(node,doc.defaultView.getComputedStyle(node),tagName,cssRules);
+                            filterStylesByUSSRules(node,styleObj,ussRules,false);if(Object.keys(styleObj).length)attrs.style=Object.entries(styleObj).map(([k,v])=>`${k}:${v}`).join('; ');
+                            let contentNodes=[];for(let child=node.firstChild;child;child=child.nextSibling){if(child.nodeType===Node.ELEMENT_NODE&&child.tagName.toLowerCase()==='summary')continue;if(child.nodeType===Node.TEXT_NODE&&child.textContent.trim()==='')continue;contentNodes.push(child);}
+                            const{allInline,groups}=groupNodes(contentNodes,isInlineNode);let childrenStr='';
+                            if(allInline){inlineGroupCounter++;const gname=`inline_group_${inlineGroupCounter}`;childrenStr+=`${'  '.repeat(indent+1)}<ui:VisualElement name="${gname}" style="flex-direction: row; align-items: auto;">\n`;for(const c of contentNodes)childrenStr+=processNode(c,indent+2)+'\n';childrenStr+=`${'  '.repeat(indent+1)}</ui:VisualElement>\n`;}
+                            else{for(const group of groups){if(group.type==='single')childrenStr+=processNode(group.node,indent+1)+'\n';else{inlineGroupCounter++;const gname=`inline_group_${inlineGroupCounter}`;let gstr=`${'  '.repeat(indent+1)}<ui:VisualElement name="${gname}" style="flex-direction: row; align-items: auto;">\n`;for(const c of group.nodes)gstr+=processNode(c,indent+2)+'\n';gstr+=`${'  '.repeat(indent+1)}</ui:VisualElement>\n`;childrenStr+=gstr;}}}
+                            return`${'  '.repeat(indent)}<ui:Foldout${buildAttrString(attrs)}>\n${childrenStr}${'  '.repeat(indent)}</ui:Foldout>`;
+                        }
+                        let uxmlTag=elementToUxml(tagName)||'ui:VisualElement';const prefix='  '.repeat(indent);
+                        const computedStyle=doc.defaultView.getComputedStyle(node);const whiteSpace=computedStyle.getPropertyValue('white-space').trim();
+                        const overflow=computedStyle.overflow,overflowX=computedStyle.overflowX,overflowY=computedStyle.overflowY;
+                        const mode=getScrollViewMode(overflow,overflowX,overflowY);if(mode)uxmlTag='ui:ScrollView';
+                        if(tagName==='input'){const type=(node.getAttribute('type')||'text').toLowerCase();switch(type){case'range':uxmlTag='ui:Slider';break;case'submit':case'file':case'button':case'reset':uxmlTag='ui:Button';break;case'checkbox':case'radio':uxmlTag='ui:Toggle';break;case'number':uxmlTag='ui:IntegerField';break;default:uxmlTag='ui:TextField';}}
+                        const attrs={};attrs.name=isBody?'body':(node.getAttribute('id')||`auto-${++autoIdCounter}`);attrs['class']=effectiveClass;
+                        const titleAttr=node.getAttribute('title');if(titleAttr)attrs.tooltip=titleAttr;
+                        let styleObj=getStylesFromComputed(node,computedStyle,tagName,cssRules);
+
+                        const parentEl = node.parentElement || node.parentNode;
+                        if (parentEl && parentEl.nodeType === Node.ELEMENT_NODE) {
+                            const parentDisplay = doc.defaultView.getComputedStyle(parentEl).getPropertyValue('display').trim();
+                            if (parentDisplay === 'grid') {
+                                styleObj['flex-grow'] = '1';
+                                styleObj.__gridChildSimulated = true;
+                                const gapStr = doc.defaultView.getComputedStyle(parentEl).getPropertyValue('gap').trim();
+                                if (gapStr && gapStr !== 'normal' && gapStr !== '0px') {
+                                    const parts = gapStr.split(/\s+/);
+                                    const gapVal = parts[0];
+                                    const numMatch = gapVal.match(/^([\d.]+)(px)?$/);
+                                    if (numMatch) {
+                                        const num = parseFloat(numMatch[1]);
+                                        const marginVal = (num / 2) + 'px';
+                                        styleObj['margin-top'] = marginVal;
+                                        styleObj['margin-right'] = marginVal;
+                                        styleObj['margin-bottom'] = marginVal;
+                                        styleObj['margin-left'] = marginVal;
+                                    }
+                                }
+                            }
+                        }
+
+                        let isLabel = (uxmlTag === 'ui:Label');
+                        if (!isLabel && uxmlTag === 'ui:VisualElement' && tagName!=='pre' && node!==body) {
+                            const cna=Array.from(node.childNodes).filter(c=>!(c.nodeType===Node.TEXT_NODE&&c.textContent.trim()===''));
+                            const hc=cna.some(c=>c.nodeType===Node.ELEMENT_NODE&&controlTags.has(c.tagName.toLowerCase()));
+                            const ap=!hc&&cna.every(c=>{if(c.nodeType===Node.TEXT_NODE)return true;if(c.nodeType===Node.ELEMENT_NODE)return phraseTags.has(c.tagName.toLowerCase());return false;});
+                            const htn=Array.from(node.childNodes).some(c=>c.nodeType===Node.TEXT_NODE&&c.textContent.trim()!=='');
+                            if(ap&&htn) isLabel = true;
+                        }
+
+                        if (isLabel) {
+                            const displayValue = computedStyle.getPropertyValue('display').trim();
+                            applyLabelTextAlignMapping(styleObj, displayValue, computedStyle);
+                        }
+
+                        const parent = node.parentElement||node.parentNode;if(parent&&parent.tagName&&parent.tagName.toLowerCase()==='tr'){styleObj['flex-grow']='1';}
+                        const childResult=groupNodes(Array.from(node.childNodes).filter(c=>!(c.nodeType===Node.TEXT_NODE&&c.textContent.trim()==='')),isInlineNode);
+                        if(childResult.allInline && uxmlTag!=='ui:DropdownField' && uxmlTag!=='ui:ProgressBar' && uxmlTag!=='ui:Foldout' && uxmlTag!=='ui:ScrollView') {
+                            styleObj['flex-direction'] = 'row';
+                            styleObj['align-items'] = 'auto';
+                            const textAlign = styleObj['-unity-text-align'];
+                            if (textAlign) {
+                                const mapping = {'middle-left':'flex-start','middle-center':'center','middle-right':'flex-end'};
+                                if (mapping[textAlign]) styleObj['justify-content'] = mapping[textAlign];
+                            }
+                        }
+                        filterStylesByUSSRules(node,styleObj,ussRules,isLabel);
+                        cleanTempProps(styleObj);
+
+                        if(uxmlTag==='ui:VisualElement'&&tagName!=='pre'&&node!==body){const cna=Array.from(node.childNodes).filter(c=>!(c.nodeType===Node.TEXT_NODE&&c.textContent.trim()===''));const hc=cna.some(c=>c.nodeType===Node.ELEMENT_NODE&&controlTags.has(c.tagName.toLowerCase()));const ap=!hc&&cna.every(c=>{if(c.nodeType===Node.TEXT_NODE)return true;if(c.nodeType===Node.ELEMENT_NODE)return phraseTags.has(c.tagName.toLowerCase());return false;});const htn=Array.from(node.childNodes).some(c=>c.nodeType===Node.TEXT_NODE&&c.textContent.trim()!=='');if(ap&&htn){
+                            if(Object.keys(styleObj).length)attrs.style=Object.entries(styleObj).map(([k,v])=>`${k}:${v}`).join('; ');let rt=Array.from(node.childNodes).map(c=>buildRichText(c,doc)).join('');if(whiteSpace==='normal'||whiteSpace==='nowrap')rt=normalizeTextForWhiteSpace(rt,whiteSpace);attrs.text=escapeXml(rt).replace(/\n/g,'&#10;');return`${prefix}<ui:Label${buildAttrString(attrs)} />`;}}
+                        if(uxmlTag==='ui:Label'){
+                            const hec=Array.from(node.childNodes).some(c=>c.nodeType===Node.ELEMENT_NODE);let rt=hec?Array.from(node.childNodes).map(c=>buildRichText(c,doc)).join(''):node.textContent;rt=normalizeTextForWhiteSpace(rt,whiteSpace);attrs.text=escapeXml(rt).replace(/\n/g,'&#10;');if(Object.keys(styleObj).length)attrs.style=Object.entries(styleObj).map(([k,v])=>`${k}:${v}`).join('; ');return`${prefix}<ui:Label${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:Button'){if(tagName==='input')attrs.text=node.getAttribute('value')||'Button';else{let rt=node.textContent.trim();rt=normalizeTextForWhiteSpace(rt,whiteSpace);attrs.text=escapeXml(rt).replace(/\n/g,'&#10;');}if(Object.keys(styleObj).length)attrs.style=Object.entries(styleObj).map(([k,v])=>`${k}:${v}`).join('; ');return`${prefix}<ui:Button${buildAttrString(attrs)} />`;}
+                        if(tagName==='tr'){styleObj['flex-direction']='row';styleObj['align-items']='auto';styleObj['justify-content']='space-around';}
+                        if(tagName==='textarea'){try{const rect=node.getBoundingClientRect();if(rect.width>0)styleObj['width']=Math.round(rect.width)+'px';if(rect.height>0)styleObj['height']=Math.round(rect.height)+'px';}catch(e){}}
+                        if(Object.keys(styleObj).length)attrs.style=Object.entries(styleObj).map(([k,v])=>`${k}:${v}`).join('; ');
+                        if(uxmlTag==='ui:ScrollView'){attrs.mode=mode;let cs2='';if(childResult.groups.length&&!childResult.allInline){for(const g of childResult.groups){if(g.type==='single')cs2+=processNode(g.node,indent+1)+'\n';else{inlineGroupCounter++;const gn=`inline_group_${inlineGroupCounter}`;let gs=`${prefix}  <ui:VisualElement name="${gn}" style="flex-direction: row; align-items: auto;">\n`;for(const c of g.nodes)gs+=processNode(c,indent+2)+'\n';gs+=`${prefix}  </ui:VisualElement>\n`;cs2+=gs;}}}else for(let child=node.firstChild;child;child=child.nextSibling)cs2+=processNode(child,indent+1)+'\n';return cs2.trim()?`${prefix}<ui:ScrollView${buildAttrString(attrs)}>\n${cs2}${prefix}</ui:ScrollView>`:`${prefix}<ui:ScrollView${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:Slider'){attrs.value=node.getAttribute('value')||'0';const min=node.getAttribute('min'),max=node.getAttribute('max');if(min!==null)attrs['low-value']=min;if(max!==null)attrs['high-value']=max;attrs['fill']='true';return`${prefix}<ui:Slider${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:DropdownField'){if(node.querySelector('optgroup'))uxmlTag='ui:VisualElement';else{const options=node.querySelectorAll('option');let si=0;const choices=[];options.forEach((opt,idx)=>{choices.push(opt.textContent.trim());if(opt.hasAttribute('selected'))si=idx;});if(choices.length){attrs.choices=choices.join(',');attrs.index=si.toString();}return`${prefix}<ui:DropdownField${buildAttrString(attrs)} />`;}}
+                        if(uxmlTag==='ui:ProgressBar'){attrs.value=node.getAttribute('value')||'0';const min=node.getAttribute('min'),max=node.getAttribute('max');if(min!==null)attrs['low-value']=min;if(max!==null)attrs['high-value']=max;return`${prefix}<ui:ProgressBar${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:IntegerField'){attrs.value=node.getAttribute('value')||'0';const min=node.getAttribute('min'),max=node.getAttribute('max');if(min!==null)attrs['low-value']=min;if(max!==null)attrs['high-value']=max;return`${prefix}<ui:IntegerField${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:Toggle'){attrs.value=node.hasAttribute('checked')?'true':'false';const lbl=node.getAttribute('label')||'';if(lbl)attrs.label=lbl;return`${prefix}<ui:Toggle${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:Image'){const src=node.getAttribute('src');if(src)attrs.source=src;return`${prefix}<ui:Image${buildAttrString(attrs)} />`;}
+                        if(uxmlTag==='ui:TextField'){if(tagName==='input'){attrs.value=node.getAttribute('value')||'';const ph=node.getAttribute('placeholder');if(ph)attrs['placeholder-text']=ph;}else if(tagName==='textarea'){attrs.multiline='true';attrs.value=node.textContent||'';const ph=node.getAttribute('placeholder');if(ph)attrs['placeholder-text']=ph;}return`${prefix}<ui:TextField${buildAttrString(attrs)} />`;}
+                        if(tagName==='optgroup'){const label=node.getAttribute('label')||'';let cs2='';cs2+=`${prefix}  <ui:Label text="${escapeXml(label)}" />\n`;for(let child=node.firstChild;child;child=child.nextSibling)cs2+=processNode(child,indent+1)+'\n';return`${prefix}<ui:VisualElement${buildAttrString(attrs)}>\n${cs2}${prefix}</ui:VisualElement>`;}
+                        let childrenStr='';if(childResult.groups.length&&!childResult.allInline){for(const g of childResult.groups){if(g.type==='single')childrenStr+=processNode(g.node,indent+1)+'\n';else{inlineGroupCounter++;const gn=`inline_group_${inlineGroupCounter}`;let gs=`${prefix}  <ui:VisualElement name="${gn}" style="flex-direction: row; align-items: auto;">\n`;for(const c of g.nodes)gs+=processNode(c,indent+2)+'\n';gs+=`${prefix}  </ui:VisualElement>\n`;childrenStr+=gs;}}}else for(let child=node.firstChild;child;child=child.nextSibling)childrenStr+=processNode(child,indent+1)+'\n';
+                        if(uxmlTag==='ui:VisualElement'&&node.childNodes.length===1&&node.firstChild.nodeType===Node.TEXT_NODE){const t=node.textContent.trim();if(t)return`${prefix}<ui:Label${buildAttrString(attrs)} text="${escapeXml(t)}" />`;}
+                        return childrenStr.trim()?`${prefix}<${uxmlTag}${buildAttrString(attrs)}>\n${childrenStr}${prefix}</${uxmlTag}>`:`${prefix}<${uxmlTag}${buildAttrString(attrs)} />`;
+                    };
+                    let uxmlBody=processNode(body,0);
+                    refineUSSRules(ussRules,doc);
+                    const ussText=generateUSSText(ussRules);
+                    document.getElementById('ussOutput').textContent=ussText;
+                    requestAnimationFrame(()=>{const el=document.getElementById('ussOutput');el.classList.remove('hljs');el.removeAttribute('data-highlighted');hljs.highlightElement(el);});
+
+                    let uxmlFormatted=`<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">\n${uxmlBody}\n</ui:UXML>`;
+                    uxmlFormatted=uxmlFormatted.replace(/\n\s*\n/g,'\n').trimEnd();
+                    document.getElementById('uxmlOutput').textContent=uxmlFormatted;
+                    requestAnimationFrame(()=>{const el=document.getElementById('uxmlOutput');el.classList.remove('hljs');el.removeAttribute('data-highlighted');hljs.highlightElement(el);});
+                    window._downloadUxml=uxmlFormatted;window._downloadUss=ussText;showMessage('✅ 转换完成','success');
+                }catch(e){showMessage('转换失败: '+e.message,'error');console.error(e);}
+            }
+
+            const loadIframe=(html,w,h)=>new Promise((resolve,reject)=>{const iframe=document.getElementById('previewFrame');iframe.style.width=w+'px';iframe.style.height=h+'px';updateIframeScale(w,h);const onLoad=()=>{iframe.removeEventListener('load',onLoad);const doc=iframe.contentDocument||iframe.contentWindow.document;if(!doc)reject(new Error('无法访问iframe'));else resolve(doc);};iframe.addEventListener('load',onLoad);iframe.srcdoc=html;});
+            const updatePreview=(html,w,h)=>{const iframe=document.getElementById('previewFrame');iframe.style.width=w+'px';iframe.style.height=h+'px';updateIframeScale(w,h);iframe.srcdoc=html;};
+            function updateIframeScale(tw,th){const iframe=document.getElementById('previewFrame');const wrapper=iframe.parentNode;const cw=wrapper.clientWidth,ch=wrapper.clientHeight;if(cw===0||ch===0)return;const scale=Math.min(cw/tw,ch/th);iframe.style.transform=`translate(-50%, -50%) scale(${scale})`;}
+
+            window.addEventListener('DOMContentLoaded',()=>{
+                const htmlInput=document.getElementById('htmlInput');const template=document.getElementById('exampleHtml');if(template)htmlInput.value=template.textContent;
+                const wi=document.getElementById('previewWidth'),hi=document.getElementById('previewHeight');
+                let cw=parseInt(wi.value,10)||1920,ch=parseInt(hi.value,10)||1080;
+                const ups=()=>{cw=parseInt(wi.value,10)||1920;ch=parseInt(hi.value,10)||1080;const iframe=document.getElementById('previewFrame');iframe.style.width=cw+'px';iframe.style.height=ch+'px';updateIframeScale(cw,ch);};
+                wi.addEventListener('input',ups);hi.addEventListener('input',ups);updatePreview(htmlInput.value,cw,ch);
+                let timer;htmlInput.addEventListener('input',e=>{clearTimeout(timer);timer=setTimeout(()=>updatePreview(e.target.value,cw,ch),400);});
+                document.getElementById('convertBtn').addEventListener('click',performConversion);
+                document.getElementById('downloadBtn').addEventListener('click',()=>{const data=window._downloadUxml;if(!data){showMessage('请先执行转换','error');return;}const blob=new Blob([data],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='output.uxml';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);showMessage('⬇️ 已下载 output.uxml','success');});
+                document.getElementById('downloadUssBtn').addEventListener('click',()=>{const data=window._downloadUss;if(!data){showMessage('请先执行转换','error');return;}const blob=new Blob([data],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='output.uss';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);showMessage('⬇️ 已下载 output.uss','success');});
+                setTimeout(performConversion,300);window.addEventListener('resize',()=>updateIframeScale(cw,ch));
+            });
+            window.copyToClipboard=function(elementId){const text=document.getElementById(elementId).textContent;navigator.clipboard.writeText(text).then(()=>showMessage('📋 已复制到剪贴板','success')).catch(()=>showMessage('复制失败，请手动选择','error'));};
+        })();
+    </script>
+</body>
+</html>

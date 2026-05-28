@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Samples/HtmlToUIToolKit/0.1.0/Example/HTML/output.uss?fileID=7433441132597879392&amp;guid=dbdf0abda119b194ba2167835b07f0c3&amp;type=3#output"/>
+    <ui:ScrollView name="body" mode="Vertical" class="html-tag-body" style="align-content: stretch;">
+        <ui:VisualElement name="canvas" class="html-tag-div" style="align-content: stretch;">
+            <ui:VisualElement name="auto-1" class="bg layer html-tag-div" style="right: 0; bottom: 0; align-content: stretch;"/>
+            <ui:VisualElement name="auto-2" class="shape layer html-tag-div" style="right: 1325px; bottom: 506px; align-content: stretch;"/>
+            <ui:VisualElement name="auto-3" class="img layer html-tag-div" style="right: 534px; bottom: 211px; align-content: stretch;"/>
+            <ui:VisualElement name="auto-4" class="group layer-group v-col html-tag-div" style="right: 98px; bottom: 329px; align-content: stretch;">
+                <ui:VisualElement name="auto-5" class="img-2 layer html-tag-div" style="align-content: stretch;"/>
+                <ui:VisualElement name="auto-6" class="row layer html-tag-div" style="align-content: stretch;">
+                    <ui:Label name="auto-7" text="换行" class="html-tag-span" style="align-content: stretch;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="auto-8" class="strip layer html-tag-div" style="right: 0; bottom: 0; align-content: stretch;"/>
+            <ui:VisualElement name="auto-9" class="what-a-beautiful-day layer html-tag-div" style="right: 1364px; bottom: 435px; align-content: stretch;">
+                <ui:Label name="auto-10" text="What a beautiful day." class="html-tag-span" style="align-content: stretch;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="auto-11" class="text layer html-tag-div" style="right: 1022px; bottom: 532px; align-content: stretch;">
+                <ui:Label name="auto-12" text="Hello World!" class="html-tag-span" style="align-content: stretch;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

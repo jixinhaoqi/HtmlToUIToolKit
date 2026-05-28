@@ -1,0 +1,24 @@
+{
+  "name": "com.xxhq.htmltouitoolkit",
+  "displayName": "HtmlToUIToolKit",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "unityRelease": "62f3",
+  "description": "将HTML/CSS布局转换为Unity UI Toolkit的UXML/USS格式。\n包含浏览器可视化转换工具、AI Prompt直接生成UXML/USS、以及编辑器资源路径后处理（Sprite Atlas集成）。\n\nConvert HTML/CSS layouts into Unity UI Toolkit UXML/USS format.\nIncludes a browser-based visual conversion tool, AI-to-UXML direct generation via SKILL prompts, and editor asset path post-processing for Sprite Atlas integration.",
+  "author": {
+    "name": "xxhq",
+    "url": "https://github.com/jixinhaoqi",
+    "email": "1515885925@qq.com"
+  },
+  "changelogUrl": "CHANGELOG.md",
+  "documentationUrl": "Documentation/HtmlToUIToolKit.md",
+  "licensesUrl": "LICENSE.md",
+  "samples": [
+    {
+      "displayName": "Example",
+      "description": "",
+      "interactiveImport": true,
+      "path": "Samples~/Example"
+    }
+  ]
+}
