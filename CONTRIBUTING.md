@@ -1,16 +1,16 @@
-# Contributing to HtmlToUGUI
+# Contributing to HtmlToUIToolKit
 
-感谢您对 HtmlToUGUI 的关注！我们欢迎各种形式的贡献，包括报告 Bug、提交功能请求、完善文档和改进代码。
+感谢您对 HtmlToUIToolKit 的关注！我们欢迎各种形式的贡献，包括报告 Bug、提交功能请求、完善文档和改进代码。
 
 ## Bug 报告
 
-1. 在 [Issues](https://github.com/jixinhaoqi/HtmlToUGUI/issues) 中搜索是否已有相似报告
+1. 在 [Issues](https://github.com/jixinhaoqi/HtmlToUIToolKit/issues) 中搜索是否已有相似报告
 2. 如无重复，创建新的 Issue 并选择 **Bug Report** 模板
 3. 提供完整信息：Unity 版本、操作系统、重现步骤、预期行为与实际行为
 
 ## 功能请求
 
-1. 在 [Issues](https://github.com/jixinhaoqi/HtmlToUGUI/issues) 中搜索是否已有相似请求
+1. 在 [Issues](https://github.com/jixinhaoqi/HtmlToUIToolKit/issues) 中搜索是否已有相似请求
 2. 创建新的 Issue 并选择 **Feature Request** 模板
 3. 清晰描述使用场景和期望功能
 
@@ -34,19 +34,19 @@
 
 English version:
 
-# Contributing to HtmlToUGUI
+# Contributing to HtmlToUIToolKit
 
 We welcome bug reports, feature requests, documentation improvements, and code contributions.
 
 ## Bug Reports
 
-1. Search [Issues](https://github.com/jixinhaoqi/HtmlToUGUI/issues) for duplicates
+1. Search [Issues](https://github.com/jixinhaoqi/HtmlToUIToolKit/issues) for duplicates
 2. Open a new Issue using the **Bug Report** template
 3. Include: Unity version, OS, reproduction steps, expected vs actual behavior
 
 ## Feature Requests
 
-1. Search [Issues](https://github.com/jixinhaoqi/HtmlToUGUI/issues) for duplicates
+1. Search [Issues](https://github.com/jixinhaoqi/HtmlToUIToolKit/issues) for duplicates
 2. Open a new Issue using the **Feature Request** template
 3. Describe the use case and desired functionality clearly
 
