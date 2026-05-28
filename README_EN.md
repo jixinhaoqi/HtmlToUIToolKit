@@ -1,4 +1,4 @@
-# HtmlToUIToolKit
+# Html To UIToolKit
 
 [![Unity](https://img.shields.io/badge/Unity-2022.3%2B-black?logo=unity)](https://unity.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
@@ -141,16 +141,3 @@ For a detailed comparison of this toolkit with other UXML/USS generation approac
 - `text-shadow` only supports single-layer shadows
 - The conversion tool relies on the browser DOM engine for style computation; high-fidelity results may require manual tweaking
 - Currently supports 50+ CSS properties; some properties need manual USS additions
-
----
-
-## License
-
-This project is open-sourced under the [MIT License](LICENSE.md).
-
----
-
-## Contact
-
-- GitHub: [jixinhaoqi](https://github.com/jixinhaoqi)
-- Email: 1515885925@qq.com

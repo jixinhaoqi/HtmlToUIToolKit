@@ -1,4 +1,4 @@
-# HtmlToUIToolKit
+# Html To UIToolKit
 
 [(English)](README_EN.md)
 
@@ -143,16 +143,3 @@ flowchart LR
 - `text-shadow` 仅支持单层阴影
 - 转换工具依赖浏览器 DOM 引擎计算样式，高保真还原需手动微调
 - 当前仅支持 50+ CSS 属性，部分属性需通过 USS 手动添加
-
----
-
-## License
-
-本项目基于 [MIT License](LICENSE.md) 开源。
-
----
-
-## 联系方式
-
-- GitHub: [jixinhaoqi](https://github.com/jixinhaoqi)
-- Email: 1515885925@qq.com
