@@ -16,7 +16,7 @@
   "samples": [
     {
       "displayName": "Example",
-      "description": "",
+      "description": "示例场景演示了预先配置的index_optimized.html文件、精灵图集和UI ToolKit画布输出，将HTML转换为UXML和USS。\n\nThe example scenario demonstrates the output of the pre-configured index_optimized.html file, sprite atlas, and UI ToolKit canvas, converting HTML into UXML and USS.",
       "interactiveImport": true,
       "path": "Samples~/Example"
     }
