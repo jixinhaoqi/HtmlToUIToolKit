@@ -28,6 +28,8 @@ flowchart LR
 
 Use [`SKILL.md`](Tools/HTMLTools/AI生成HTML提示词/SKILL.md) as the AI system prompt to generate Unity 6-compliant UXML/USS directly. The output can be saved as `.uxml` and `.uss` files for immediate use.
 
+![AI Direct UXML/USS Generation](Documentation/gifs/登录.gif)
+
 > For Sprite Atlas integration or path format switching, use **Assets > HtmlToUIToolKit** menu's path post-processing.
 
 ### Workflow B: HTML Browser Conversion
@@ -41,6 +43,12 @@ flowchart LR
 ```
 
 Open [`HTML转UIToolKit工具.html`](Tools/HTMLTools/HTML转UIToolKit工具.html) (or via menu **Tools > HtmlToUIToolKit > 浏览器打开HTML转UIToolKit工具** or [Online Tool](https://jixinhaoqi.github.io/HtmlToUIToolKit/)), paste HTML code, preview in real-time, convert and download. See [`Tutorial`](Tools/HTMLTools/HTML转UIToolKit工具使用教程_EN.md) for detailed steps.
+
+![Translator](Documentation/gifs/翻译助手.gif)  ![Shopping](Documentation/gifs/购物.gif)
+
+![DemonSlayer](Documentation/gifs/鬼灭之刃.gif)  ![NodeEditor](Documentation/gifs/节点编辑器.gif)
+
+![ScreenshotMapping](Documentation/gifs/截图映射.gif)  ![MOBA](Documentation/gifs/moba.gif)
 
 ---
 
@@ -77,6 +85,8 @@ Open [`HTML转UIToolKit工具.html`](Tools/HTMLTools/HTML转UIToolKit工具.html
 2. Expand the **Samples** list
 3. Click **Import** next to **Example**
 4. The sample scene and source files will be under `Assets/Samples/HtmlToUIToolKit/`
+
+![Example Demo](Documentation/gifs/例子.gif)
 
 ---
 

@@ -30,6 +30,8 @@ Use cases:
 3. Click **Import** next to **Example**
 4. Sample files are located at `Assets/Samples/HtmlToUIToolKit/0.1.0/Example/`
 
+![Example Demo](gifs/例子.gif)
+
 ---
 
 # Using HtmlToUIToolKit
@@ -45,6 +47,8 @@ The most efficient approach—AI outputs ready-to-use UXML/USS code directly.
 3. **Get the Code**: The AI will return standard UXML and USS code
 4. **Save Files**: Save the code as `.uxml` and `.uss` files respectively
 5. **Use in Unity**: Reference these files via UI Builder or PanelSettings
+
+![AI Direct UXML/USS Generation](gifs/登录.gif)
 
 ### Path Post-Processing (Optional)
 
@@ -74,6 +78,10 @@ Ideal for scenarios where you have existing HTML drafts and need visual preview 
 5. **Convert**: Click the **"执行转换"** (Convert) button
 6. **View Output**: The right panel displays USS and UXML code with syntax highlighting
 7. **Export**: Use the **下载 UXML** / **下载 USS** buttons to save files
+
+![Translator](gifs/翻译助手.gif)  ![Shopping](gifs/购物.gif)
+![DemonSlayer](gifs/鬼灭之刃.gif)  ![NodeEditor](gifs/节点编辑器.gif)
+![ScreenshotMapping](gifs/截图映射.gif)  ![MOBA](gifs/moba.gif)
 
 For detailed instructions, see the [`Tutorial`](../Tools/HTMLTools/HTML转UIToolKit工具使用教程_EN.md).
 

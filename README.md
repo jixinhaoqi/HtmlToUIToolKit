@@ -30,6 +30,8 @@ flowchart LR
 
 使用 [`SKILL.md`](Tools/HTMLTools/AI生成HTML提示词/SKILL.md) 作为 AI 的系统提示词，让 AI 直接输出符合 Unity 6 标准的 UXML/USS 内容。生成的代码可直接放入 `.uxml` 和 `.uss` 文件使用。
 
+![AI 直接生成 UXML/USS](Documentation/gifs/登录.gif)
+
 > 如需配合 Sprite Atlas 或切换图片引用方式，使用菜单 **Assets > HtmlToUIToolKit** 下的路径后处理功能。
 
 ### 工作流 B：HTML 浏览器转换
@@ -43,6 +45,12 @@ flowchart LR
 ```
 
 打开 [`HTML转UIToolKit工具.html`](Tools/HTMLTools/HTML转UIToolKit工具.html)（也可通过菜单 **Tools > HtmlToUIToolKit > 浏览器打开工具** 或 [在线运行工具](https://jixinhaoqi.github.io/HtmlToUIToolKit/)），粘贴 HTML 代码，实时预览效果后转换并下载。详细操作见 [`使用教程`](Tools/HTMLTools/HTML转UIToolKit工具使用教程.md)。
+
+![翻译助手](Documentation/gifs/翻译助手.gif)  ![购物](Documentation/gifs/购物.gif)
+
+![鬼灭之刃](Documentation/gifs/鬼灭之刃.gif)  ![节点编辑器](Documentation/gifs/节点编辑器.gif)
+
+![截图映射](Documentation/gifs/截图映射.gif)  ![moba](Documentation/gifs/moba.gif)
 
 ---
 
@@ -79,6 +87,8 @@ flowchart LR
 2. 展开 **Samples** 列表
 3. 点击 **Example** 后的 **Import** 按钮
 4. 导入后可在 `Assets/Samples/HtmlToUIToolKit/` 下查看示例场景和转换源码
+
+![示例演示](Documentation/gifs/例子.gif)
 
 ---
 
